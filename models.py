@@ -59,20 +59,36 @@ class ClusteringModel:
         if self.labels is None:
             raise ValueError("Model not fitted")
 
-        data = np.array(data)
-        n = data.shape[0]
-        a = np.zeros(n)
-        b = np.zeros(n)
+        def intra_cluster_distance(data, i):
+            mask = self.labels == self.labels[i]
+            cluster_pts = data[mask]
+            if len(cluster_pts) == 1:
+                return 0
+            else:
+                distances = np.sqrt(np.sum((cluster_pts - data[i]) ** 2, axis=1))
+                return np.mean(distances[distances != 0])
 
-        for i in range(n):
-            same_cluster = data[self.labels == self.labels[i]]
-            other_cluster = data[self.labels != self.labels[i]]
+        def nearest_cluster_distance(data, i):
+            mask = self.labels != labels[i]
+            if np.sum(mask) == 0:
+                return 0
+            else:
+                diff_cluster_pts = data[mask]
+                cluster_ids = np.unique(self.labels[mask])
+                mean_dist = []
+                for cid in cluster_ids:
+                    cluster_mask = self.labels == cid
+                    cluster_pts = data[cluster_mask]
+                    distances = np.sqrt(np.sum((cluster_pts - data[i]) ** 2, axis=1))
+                    mean_dist.append(np.mean(distances))
+                return np.min(mean_dist)
 
-            a[i] = np.mean(np.sqrt(((same_cluster - data[i])**2).sum(axis=1)))
-            b[i] = np.mean(np.sqrt(((other_cluster - data[i])**2).sum(axis=1)))
-
-        s = (b - a) / np.maximum(a, b)
-        return np.mean(s)
+        silhouettes = []
+        for i in range(data.shape[0]):
+            a = intra_cluster_distance(data, i)
+            b = nearest_cluster_distance(data, i)
+            silhouettes.append((b - a) / max(a,b))
+        return np.mean(silhouettes)
 
     def compute_representation(self, X):
         return np.linalg.norm(X[:, np.newaxis] - self.centroids, axis=2)
