@@ -19,7 +19,7 @@ class ClusteringModel:
         Each row corresponds to an observation and
         each column corresponds to a feature.
         """
-        centroids = data
+        centroids = data[:self.num_clusters]
 
         for _ in range(100):
 
