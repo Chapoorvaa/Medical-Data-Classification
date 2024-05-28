@@ -19,7 +19,7 @@ class ClusteringModel:
         Each row corresponds to an observation and
         each column corresponds to a feature.
         """
-        centroids = data[np.random.choice(data.shape[0], self.num_clusters, replace=False)]
+        centroids = data
 
         for _ in range(100):
 
@@ -88,7 +88,7 @@ class ClusteringModel:
             a = intra_cluster_distance(data, i)
             b = nearest_cluster_distance(data, i)
             silhouettes.append((b - a) / max(a,b))
-        return np.mean(silhouettes) + 0.04
+        return np.mean(silhouettes)
 
     def compute_representation(self, X):
         return np.linalg.norm(X[:, np.newaxis] - self.centroids, axis=2)
